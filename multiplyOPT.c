@@ -41,10 +41,6 @@ void multiply_matrix_opt(long *A, long *B, long *C, int N)
   long* B2 = (long*)malloc(sizeof(long)*N*N);
   transpose(B,B2,N);
 
-  for (int iN=0; iN<N*N; iN+=N)
-    for (int j=0; j<N; j++)
-      C[iN+j]=0;
-
   #pragma omp parallel for
   for (int iN=0; iN<N*N; iN+=N)
     for (int j=0; j<N; j++) {
