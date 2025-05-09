@@ -50,9 +50,9 @@ void multiply_matrix_opt(long *A, long *B, long *C, int N)
     for (j=0; j<N; j++)
       C[i*N+j]=0;
 
-  for (k=0; k<N; k++)
+  for (i=0; i<N; i++)
     for (j=0; j<N; j++)
-      for (i=0; i<N; i++)
+      for (k=0; k<N; k++)
         C[i*N+j] += A[i*N+k]*B2[j*N+k];
 
   free(B2);
