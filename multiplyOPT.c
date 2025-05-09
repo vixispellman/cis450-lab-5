@@ -25,17 +25,14 @@ void multiply_matrix_semi_opt(long *A, long *B, long *C, int N)
 }
 
 void transpose(long *A, long *B, int N) {
-    register int i,j,iN;
-    register long *aptr, *bptr;
-    iN = 0;
+    int i,j;
+    long *bptr;
     for(i=0; i<N; i++) {
-        aptr = &A[iN];
         bptr = &B[i];
         for(j=0; j<N; j++){
-            *bptr = (*aptr++);
+            *bptr = (*A++);
             bptr+=N;
         }
-        iN += N;
     }
 }
 
