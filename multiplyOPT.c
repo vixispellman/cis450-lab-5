@@ -38,19 +38,18 @@ void transpose(long *A, long *B, int N) {
 
 void multiply_matrix_opt(long *A, long *B, long *C, int N)
 {
-  int iN, j, k;
-  register long *B2;
-  B2 = (long*)malloc(sizeof(long)*N*N);
+  long* B2 = (long*)malloc(sizeof(long)*N*N);
   transpose(B,B2,N);
 
-  for (iN=0; iN<N*N; iN+=N)
-    for (j=0; j<N; j++)
+  for (int iN=0; iN<N*N; iN+=N)
+    for (int j=0; j<N; j++)
       C[iN+j]=0;
 
-  for (iN=0; iN<N*N; iN+=N)
-    for (j=0; j<N; j++) {
+  #pragma omp parallel for
+  for (int iN=0; iN<N*N; iN+=N)
+    for (int j=0; j<N; j++) {
       long temp = 0;
-      for (k=0; k<N; k++)
+      for (int k=0; k<N; k++)
         temp += A[iN+k]*B2[j*N+k];
       C[iN+j] = temp;
     }
