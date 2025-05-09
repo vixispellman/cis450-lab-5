@@ -1,6 +1,5 @@
+*.o
+*.bmp
 detect
-detectOPT.o
 multiply
-multiplyOPT.o
 shade
-shadeOPT.o
