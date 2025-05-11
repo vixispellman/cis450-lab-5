@@ -37,7 +37,8 @@ void transpose(long *A, long *B, int N) {
 }
 
 void multiply_matrix_opt(long *A, long *B, long *C, int N) {
-  long *B2 = (long *)malloc(sizeof(long) * N * N);
+  // Use aligned_alloc to be cache-friendly
+  long *B2 = (long *)aligned_alloc(64, sizeof(long) * N * N);
   // Transpose to be cache-friendly
   transpose(B, B2, N);
 

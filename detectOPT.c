@@ -13,7 +13,7 @@ extern byte c[MAX_ROW][MAX_COL][NUM_COLORS];
 void detect_optimized(int width, int height, int threshold)
 {
   int x_block, y_block, x_end, y_end, x, y, r, g, b, offset;
-  #pragma omp parallel for schedule(guided)
+  #pragma omp parallel for schedule(static)
   for (x_block = 1; x_block < height - 1; x_block += BLOCK_SIZE) {
     x_end = (x_block + BLOCK_SIZE < height-1) ? x_block + BLOCK_SIZE : height-1;
     for (int y_block = 1; y_block < width-1; y_block += BLOCK_SIZE) {
