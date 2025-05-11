@@ -36,18 +36,29 @@ void transpose(long *A, long *B, int N) {
     }
 }
 
-void multiply_matrix_opt(long *A, long *B, long *C, int N)
-{
-  long* B2 = (long*)malloc(sizeof(long)*N*N);
-  transpose(B,B2,N);
+void multiply_matrix_opt(long *A, long *B, long *C, int N) {
+  long *B2 = (long *)malloc(sizeof(long) * N * N);
+  // Transpose to be cache-friendly
+  transpose(B, B2, N);
 
+  // Add Threads
   #pragma omp parallel for
-  for (int iN=0; iN<N*N; iN+=N)
-    for (int j=0; j<N; j++) {
+  for (int iN = 0; iN < N * N; iN += N)
+    for (int j = 0; j < N; j++) {
+      // Common Subexpression
+      const int jN = j * N;
+      // Avoid Volatile
       long temp = 0;
-      for (int k=0; k<N; k++)
-        temp += A[iN+k]*B2[j*N+k];
-      C[iN+j] = temp;
+      // Loop Unrolling
+      int k;
+      for (k = 0; k < N - 3; k += 4)
+        temp += A[iN + k] * B2[jN + k]
+                + A[iN + k + 1] * B2[jN + k + 1]
+                + A[iN + k + 2] * B2[jN + k + 2]
+                + A[iN + k + 3] * B2[jN + k + 3];
+      for (; k < N; k++)
+        temp += A[iN + k] * B2[jN + k];
+      C[iN + j] = temp;
     }
 
   free(B2);
