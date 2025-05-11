@@ -18,6 +18,7 @@ void shade_optimized(int width, int height)
   // set edge pixels to black
   memset(&c[0][0][0], 0, width * 3);
   memset(&c[height-1][0][0], 0, width * 3);
+  #pragma omp parallel for
   for (int x = 1; x < height - 1; x++) {
     memset(&c[x][0][0], 0, 3);
     memset(&c[x][width-1][0], 0, 3);
@@ -34,23 +35,22 @@ void shade_optimized(int width, int height)
   unsigned char s1 = shade[1];
   unsigned char s2 = shade[2];
 
-  int x, y, inRange;
+  int x, y, in_range;
 
   #pragma omp parallel for private(y)
   for (x = 1; x < height - 1; x++) {
-    unsigned char *row_in = &a[x][1][0];
-    unsigned char *row_out = &c[x][1][0];
+    unsigned char *in = &a[x][1][0];
+    unsigned char *out = &c[x][1][0];
     for (y = 1; y < width - 1; y++) {
-      unsigned char *in  = row_in + (y-1)*3;
-      unsigned char *out = row_out + (y-1)*3;
-      inRange = 
-        (in[0] >= t0_min && in[0] <= t0_max) &
-        (in[1] >= t1_min && in[1] <= t1_max) &
+      in_range = 
+        (in[0] >= t0_min && in[0] <= t0_max) &&
+        (in[1] >= t1_min && in[1] <= t1_max) &&
         (in[2] >= t2_min && in[2] <= t2_max);
 
-      out[0] = inRange ? in[0] : s0;
-      out[1] = inRange ? in[1] : s1;
-      out[2] = inRange ? in[2] : s2;
+      out[0] = in_range ? in[0] : s0;
+      out[1] = in_range ? in[1] : s1;
+      out[2] = in_range ? in[2] : s2;
+      in += 3; out += 3;
     }
   }
   return;
