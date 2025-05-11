@@ -3,40 +3,42 @@
 //               to detect edges
 //
 #include "bmp.h"  // for MAX_ROW, MAX_COL, NUM_COLORS
+#include <omp.h>
+
+#define BLOCK_SIZE 64
 
 extern byte a[MAX_ROW][MAX_COL][NUM_COLORS];
 extern byte c[MAX_ROW][MAX_COL][NUM_COLORS];
 
 void detect_optimized(int width, int height, int threshold)
 {
-  int x, y, z;
-  int tmp;
-  int outputColor; // set outputColor to 255 for white or 0 for black
-  int mask[3][3] = {{-1, 0, -1},
-                    { 0, 4,  0},
-                    {-1, 0, -1}};
+  int x_block, y_block, x_end, y_end, x, y, r, g, b, offset;
+  #pragma omp parallel for schedule(guided)
+  for (x_block = 1; x_block < height - 1; x_block += BLOCK_SIZE) {
+    x_end = (x_block + BLOCK_SIZE < height-1) ? x_block + BLOCK_SIZE : height-1;
+    for (int y_block = 1; y_block < width-1; y_block += BLOCK_SIZE) {
+      y_end = (y_block + BLOCK_SIZE < width-1) ? y_block + BLOCK_SIZE : width-1;
+      
+      for (x = x_block; x < x_end; x++) {
+        unsigned char *in_m1 = &a[x-1][0][0];
+        unsigned char *in_0 = &a[x][0][0];
+        unsigned char *in_p1 = &a[x+1][0][0];
+        unsigned char *row_out = &c[x][1][0];
+        for (y = y_block; y < y_end; y++) {
+          unsigned char *out = row_out + (y-1)*3;
+          offset = y * 3;
 
-  for (y = 1; y < width-1; y++)
-    for (x = 1; x < height-1; x++)
-    {
-      outputColor = 255; // in any computed color > threshold, set color to black (an edge)
-      for (z = 0; z < 3; z++)
-      {
-        tmp = mask[0][0]*a[x-1][y-1][z]+
-              mask[1][0]*a[x][y-1][z]+
-              mask[2][0]*a[x+1][y-1][z]+
-              mask[0][1]*a[x-1][y][z]+
-              mask[1][1]*a[x][y][z]+
-              mask[2][1]*a[x+1][y][z]+
-              mask[0][2]*a[x-1][y+1][z]+
-              mask[1][2]*a[x][y+1][z]+
-              mask[2][2]*a[x+1][y+1][z];
-        if (tmp>threshold)
-              outputColor = 0;
+          r = -in_m1[offset-3] + 4*in_0[offset] - in_p1[offset-3]
+              - in_m1[offset+3] - in_p1[offset+3];
+          g = -in_m1[offset-2] + 4*in_0[offset+1] - in_p1[offset-2]
+              - in_m1[offset+4] - in_p1[offset+4];
+          b = -in_m1[offset-1] + 4*in_0[offset+2] - in_p1[offset-1]
+              - in_m1[offset+5] - in_p1[offset+5];
+      
+          out[0] = out[1] = out[2] = (r > threshold || g > threshold || b > threshold) ? 0 : 255;
+        }
       }
-      for (z = 0; z < 3; z++)
-        c[x][y][z] = outputColor;
     }
+  }
   return;
-
 }
